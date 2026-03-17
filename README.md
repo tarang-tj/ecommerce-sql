@@ -1,113 +1,95 @@
-# 🛒 E-Commerce SQL Analysis (PostgreSQL)
+# Rent & Homelessness in Washington State (2015–2024)
 
-A collection of PostgreSQL data analysis queries for an e-commerce database by covering revenue, customer behaviour, product performance, and order operations.
+**Are rising rent prices associated with increased homelessness in Washington State?**
+
+This project analyzes the relationship between housing costs and homelessness across Washington State from 2015 to 2024, using Zillow's Observed Rent Index (ZORI) and HUD's annual Point-in-Time (PIT) homeless counts.
+
+> University of Washington Bothell — Data Analysis Project  
+> Authors: Alisa Seng Chea, Duke Sarankhuu, Tarang Jammalamadaka
 
 ---
 
-## 📁 Project Structure
+## Key Findings
+
+- **Both rent and homelessness rose ~60%** between 2015 and 2024, suggesting a strong positive association between housing costs and housing instability
+- **2024 reached all-time highs** for both average rent (~$1,650/mo) and total homelessness (31,554 individuals)
+- **2021 is a notable outlier** — homelessness dropped sharply to 11,511 despite rising rent, attributable to COVID-19 eviction moratoriums and federal emergency rental assistance
+- **Correlation coefficient: r ≈ 0.78** (all years); **r ≈ 0.97** excluding the 2021 outlier — a strong positive relationship
+
+---
+
+## Visualizations
+
+### Chart 1 — Average Monthly Rent (2015–2024)
+![Chart 1](output/chart1_avg_rent.png)
+
+### Chart 2 — Total Homelessness (2015–2024)
+![Chart 2](output/chart2_homelessness.png)
+
+### Chart 3 — Rent vs. Homelessness Scatter (Key Chart)
+![Chart 3](output/chart3_rent_vs_homelessness.png)
+
+> Each point represents one year. The dashed trend line shows a clear upward relationship between rent and homelessness. 2021 stands out below the trend due to COVID-era housing protections.
+
+---
+
+## Data Sources
+
+| Dataset | Source | Link |
+|---|---|---|
+| Zillow Observed Rent Index (ZORI) | Zillow Research | [zillow.com/research/data](https://www.zillow.com/research/data/) |
+| Point-in-Time Estimates by State | U.S. Dept. of Housing & Urban Development (HUD) | [hudexchange.info](https://www.hudexchange.info/resource/3031/pit-and-hic-data-since-2007/) |
+
+---
+
+## Project Structure
 
 ```
-ecommerce-sql/
-├── schema/
-│   └── schema.sql          # Table definitions & indexes
+wa-housing-homelessness/
+│
 ├── data/
-│   └── seed.sql            # Sample data for local testing
-├── analysis/
-│   ├── 01_revenue.sql      # Revenue & financial KPIs
-│   ├── 02_customers.sql    # Customer segmentation & cohorts
-│   ├── 03_products.sql     # Product performance & affinity
-│   └── 04_orders.sql       # Order funnel & operations
-└── docs/
-    └── erd.md              # Entity Relationship overview
+│   ├── zillow_rent_index_wa.csv       # Zillow ZORI — all metros (wide format)
+│   └── hud_pit_wa_2015_2024.csv       # HUD PIT counts for Washington State
+│
+├── scripts/
+│   └── analysis.R                     # Full R analysis: cleaning, merging, charts
+│
+├── output/
+│   ├── chart1_avg_rent.png
+│   ├── chart2_homelessness.png
+│   └── chart3_rent_vs_homelessness.png
+│
+└── README.md
 ```
 
 ---
 
-## 🗄️ Schema Overview
+## How to Run
 
-| Table | Description |
-|---|---|
-| `customers` | Registered users |
-| `categories` | Hierarchical product categories |
-| `products` | Product catalogue with pricing & stock |
-| `orders` | Customer orders with status tracking |
-| `order_items` | Line items linking orders to products |
-| `reviews` | Customer ratings and written reviews |
+**Requirements:** R 4.0+ with the following packages:
+```r
+install.packages(c("tidyverse", "readr", "ggplot2", "scales"))
+```
+
+**Run the analysis:**
+```r
+setwd("wa-housing-homelessness")
+source("scripts/analysis.R")
+```
+
+Charts will be saved to the `output/` folder. Console output will print the correlation stats and key findings.
 
 ---
 
-## 🚀 Getting Started
+## Methodology Notes
 
-### 1. Prerequisites
-- PostgreSQL 14+
-- `psql` CLI or a GUI like [TablePlus](https://tableplus.com/) / [DBeaver](https://dbeaver.io/)
-
-### 2. Create the database
-
-```bash
-psql -U postgres -c "CREATE DATABASE ecommerce;"
-```
-
-### 3. Load schema
-
-```bash
-psql -U postgres -d ecommerce -f schema/schema.sql
-```
-
-### 4. Seed sample data
-
-```bash
-psql -U postgres -d ecommerce -f data/seed.sql
-```
-
-### 5. Run analysis queries
-
-```bash
-psql -U postgres -d ecommerce -f analysis/01_revenue.sql
-```
+- **Rent data**: Monthly ZORI values for all Washington State metros were averaged by year to produce a single statewide annual figure
+- **Homelessness data**: HUD PIT counts represent a single-night count conducted each January — they are an undercount by design but are the most consistent longitudinal measure available
+- **Causation caveat**: This analysis identifies a correlation, not causation. Homelessness is driven by multiple factors including mental health, substance use, and policy. Rising rent is one contributing pressure
 
 ---
 
-## 📊 Analyses Included
+## Additional References
 
-### 01 · Revenue (`01_revenue.sql`)
-- Total revenue (excluding cancellations)
-- Monthly revenue trend
-- Revenue breakdown by category
-- Average order value
-
-### 02 · Customers (`02_customers.sql`)
-- Top 10 customers by lifetime value
-- Revenue by country
-- Customer segmentation: one-time / repeat / loyal
-- Cohort retention analysis
-
-### 03 · Products (`03_products.sql`)
-- Best-selling products by units & revenue
-- Review conversion rate per product
-- Average ratings leaderboard
-- Low stock alerts
-- Frequently bought together (market basket)
-
-### 04 · Orders (`04_orders.sql`)
-- Order status funnel breakdown
-- Cancellation rate by month
-- Multi-item orders
-- Rolling 7-day revenue window
-
----
-
-## 💡 Key SQL Techniques Used
-
-- **Window functions** — `SUM() OVER`, `ROWS BETWEEN` for rolling metrics
-- **CTEs** — Readable multi-step queries (cohort analysis)
-- **CASE expressions** — Customer segmentation logic
-- **Aggregations** — `COUNT DISTINCT`, `AVG`, `ROUND`
-- **Self-joins** — Market basket / frequently bought together
-- **LEFT JOINs** — Ensuring products without reviews still appear
-
----
-
-## 📄 License
-
-MIT — free to use, fork, and extend.
+- Rental Housing Association of Washington. COVID-19 Resources. https://www.rhawa.org/covid-19  
+- U.S. Department of the Treasury. Emergency Rental Assistance Program. https://home.treasury.gov/policy-issues/coronavirus/assistance-for-state-local-and-tribal-governments/emergency-rental-assistance-program
