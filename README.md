@@ -1,6 +1,6 @@
 # 🛒 E-Commerce SQL Analysis (PostgreSQL)
 
-A collection of PostgreSQL data analysis queries for an e-commerce database — covering revenue, customer behaviour, product performance, and order operations.
+A collection of PostgreSQL data analysis queries for an e-commerce database by covering revenue, customer behaviour, product performance, and order operations.
 
 ---
 
