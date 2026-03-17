@@ -1,2 +1,2 @@
 *.sql linguist-language=SQL linguist-detectable=true
-docs/index.html linguist-documentation=true
+index.html linguist-vendored=true
