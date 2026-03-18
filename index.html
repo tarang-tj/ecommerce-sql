@@ -3,768 +3,500 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TJ Jammalamadaka — Data & Business Analyst</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>E-Commerce SQL Analytics Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   :root {
-    --ink: #0f0f0f;
-    --paper: #f5f2ec;
-    --accent: #c84b2f;
-    --accent2: #1a4a6b;
-    --muted: #7a7269;
-    --rule: #d8d3c8;
-    --card: #efeae0;
+    --bg:       #0d0f14;
+    --surface:  #161a24;
+    --card:     #1e2330;
+    --border:   #2a3045;
+    --accent:   #6c8ef5;
+    --accent2:  #4fd1c5;
+    --accent3:  #f6ad55;
+    --accent4:  #fc8181;
+    --text:     #e2e8f0;
+    --muted:    #8892a4;
+    --green:    #68d391;
+    --red:      #fc8181;
   }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--paper);
-    color: var(--ink);
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 300;
-    overflow-x: hidden;
+  header {
+    background: linear-gradient(135deg, #1e2330 0%, #161a24 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 40px;
+    display: flex; align-items: center; justify-content: space-between;
   }
+  .header-left h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.3px; }
+  .header-left p  { color: var(--muted); font-size: 0.82rem; margin-top: 3px; }
+  .badge { background: #1a2744; border: 1px solid var(--accent); color: var(--accent);
+           font-size: 0.72rem; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
 
-  /* NOISE TEXTURE OVERLAY */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 9999;
-    opacity: 0.6;
+  .main { padding: 32px 40px; max-width: 1400px; margin: 0 auto; }
+
+  /* KPI cards */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+  .kpi {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 22px 24px; position: relative; overflow: hidden;
   }
-
-  /* NAVIGATION */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.25rem 3rem;
-    background: rgba(245, 242, 236, 0.88);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--rule);
+  .kpi::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--kpi-color, var(--accent));
   }
+  .kpi-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase;
+               letter-spacing: 0.8px; margin-bottom: 10px; }
+  .kpi-value { font-size: 2rem; font-weight: 700; letter-spacing: -1px; }
+  .kpi-sub   { font-size: 0.78rem; color: var(--muted); margin-top: 6px; }
+  .kpi-delta { font-size: 0.78rem; margin-top: 4px; font-weight: 600; }
+  .up   { color: var(--green); }
+  .down { color: var(--red); }
 
-  .nav-logo {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.8rem;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    color: var(--accent);
-    text-transform: uppercase;
+  /* Charts */
+  .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .charts-row3 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .charts-row4 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 32px; }
+
+  .chart-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px;
   }
+  .chart-title { font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .chart-sub   { font-size: 0.75rem; color: var(--muted); margin-bottom: 18px; }
+  .chart-wrap  { position: relative; height: 220px; }
+  .chart-wrap-tall { position: relative; height: 280px; }
 
-  .nav-links {
-    display: flex;
-    gap: 2.5rem;
-    list-style: none;
+  /* Tables */
+  .tables-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 32px; }
+  .table-card  {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px;
   }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  th { text-align: left; padding: 8px 10px; color: var(--muted); font-weight: 600;
+       font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px;
+       border-bottom: 1px solid var(--border); }
+  td { padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(108,142,245,0.05); }
 
-  .nav-links a {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.72rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    text-decoration: none;
-    transition: color 0.2s;
+  .rank-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%; font-size: 0.72rem; font-weight: 700;
+    background: var(--border); color: var(--muted);
   }
+  .rank-1 { background: rgba(246,173,85,0.2); color: var(--accent3); }
+  .rank-2 { background: rgba(108,142,245,0.15); color: var(--accent); }
+  .rank-3 { background: rgba(79,209,197,0.15); color: var(--accent2); }
 
-  .nav-links a:hover { color: var(--ink); }
-
-  /* HERO */
-  .hero {
-    min-height: 100vh;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding-top: 5rem;
+  .bar-mini {
+    display: inline-block; height: 6px; border-radius: 3px;
+    background: var(--accent); vertical-align: middle; margin-left: 8px;
   }
-
-  .hero-left {
-    padding: 6rem 3rem 4rem 3rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    border-right: 1px solid var(--rule);
+  .segment-chip {
+    display: inline-block; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px;
+    font-weight: 600;
   }
+  .chip-champion  { background: rgba(246,173,85,0.15); color: var(--accent3); }
+  .chip-loyal     { background: rgba(108,142,245,0.15); color: var(--accent); }
+  .chip-potential { background: rgba(79,209,197,0.15); color: var(--accent2); }
+  .chip-atrisk    { background: rgba(252,129,129,0.15); color: var(--red); }
+  .chip-recent    { background: rgba(104,211,145,0.15); color: var(--green); }
+  .chip-lost      { background: rgba(138,147,164,0.1); color: var(--muted); }
 
-  .hero-tag {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.72rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 1.5rem;
-    opacity: 0;
-    animation: fadeUp 0.6s ease forwards 0.2s;
-  }
+  .bar-cell  { display: flex; align-items: center; gap: 8px; min-width: 120px; }
+  .bar-pct   { font-size: 0.78rem; color: var(--text); min-width: 38px; text-align: right; }
+  .bar-track { flex: 1; height: 6px; background: rgba(255,255,255,0.07); border-radius: 3px; overflow: hidden; }
+  .bar-fill  { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
 
-  .hero-name {
-    font-family: 'DM Serif Display', serif;
-    font-size: clamp(3rem, 5vw, 5.5rem);
-    line-height: 1.0;
-    letter-spacing: -0.02em;
-    margin-bottom: 1rem;
-    opacity: 0;
-    animation: fadeUp 0.7s ease forwards 0.35s;
-  }
-
-  .hero-name em {
-    font-style: italic;
-    color: var(--accent);
-  }
-
-  .hero-title {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 1.05rem;
-    font-weight: 300;
-    color: var(--muted);
-    line-height: 1.6;
-    max-width: 380px;
-    margin-bottom: 2.5rem;
-    opacity: 0;
-    animation: fadeUp 0.7s ease forwards 0.5s;
-  }
-
-  .hero-cta {
-    display: flex;
-    gap: 1rem;
-    opacity: 0;
-    animation: fadeUp 0.7s ease forwards 0.65s;
-  }
-
-  .btn {
-    display: inline-block;
-    padding: 0.75rem 1.75rem;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.72rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    text-decoration: none;
-    border: 1.5px solid var(--ink);
-    color: var(--ink);
-    background: transparent;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn:hover { background: var(--ink); color: var(--paper); }
-
-  .btn-filled {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: white;
-  }
-
-  .btn-filled:hover { background: #a83a20; border-color: #a83a20; color: white; }
-
-  .hero-right {
-    padding: 6rem 3rem 4rem 3rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 0;
-  }
-
-  .stat-row {
-    padding: 1.75rem 0;
-    border-bottom: 1px solid var(--rule);
-    display: flex;
-    align-items: baseline;
-    gap: 1.25rem;
-    opacity: 0;
-    animation: fadeUp 0.6s ease forwards;
-  }
-
-  .stat-row:nth-child(1) { animation-delay: 0.4s; }
-  .stat-row:nth-child(2) { animation-delay: 0.55s; }
-  .stat-row:nth-child(3) { animation-delay: 0.7s; }
-  .stat-row:nth-child(4) { animation-delay: 0.85s; }
-
-  .stat-number {
-    font-family: 'DM Serif Display', serif;
-    font-size: 2.8rem;
-    color: var(--accent);
-    line-height: 1;
-    min-width: 90px;
-  }
-
-  .stat-label {
-    font-size: 0.85rem;
-    color: var(--muted);
-    line-height: 1.4;
-  }
-
-  .stat-label strong {
-    display: block;
-    color: var(--ink);
-    font-weight: 500;
-    font-size: 0.92rem;
-    margin-bottom: 0.15rem;
-  }
-
-  /* SECTION LAYOUT */
-  section {
-    padding: 5rem 3rem;
-    border-top: 1px solid var(--rule);
-  }
-
-  .section-header {
-    display: flex;
-    align-items: baseline;
-    gap: 1.5rem;
-    margin-bottom: 3.5rem;
-  }
-
-  .section-num {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--accent);
-    letter-spacing: 0.1em;
-  }
-
-  .section-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 2.4rem;
-    letter-spacing: -0.02em;
-  }
-
-  /* PROJECTS */
-  .projects-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0;
-    border: 1px solid var(--rule);
-  }
-
-  .project-card {
-    padding: 2.25rem;
-    border-right: 1px solid var(--rule);
-    position: relative;
-    overflow: hidden;
-    transition: background 0.3s;
-  }
-
-  .project-card:last-child { border-right: none; }
-  .project-card:hover { background: var(--card); }
-
-  .project-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--accent);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.3s ease;
-  }
-
-  .project-card:hover::before { transform: scaleX(1); }
-
-  .project-year {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.68rem;
-    color: var(--accent);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    margin-bottom: 0.75rem;
-  }
-
-  .project-name {
-    font-family: 'DM Serif Display', serif;
-    font-size: 1.25rem;
-    line-height: 1.25;
-    margin-bottom: 1rem;
-    letter-spacing: -0.01em;
-  }
-
-  .project-desc {
-    font-size: 0.83rem;
-    color: var(--muted);
-    line-height: 1.65;
-    margin-bottom: 1.5rem;
-  }
-
-  .project-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-  }
-
-  .tag {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.64rem;
-    letter-spacing: 0.08em;
-    padding: 0.25rem 0.6rem;
-    border: 1px solid var(--rule);
-    color: var(--muted);
-    text-transform: uppercase;
-  }
-
-  /* EXPERIENCE */
-  .experience-list { display: flex; flex-direction: column; }
-
-  .exp-item {
-    display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 2rem;
-    padding: 2.25rem 0;
-    border-bottom: 1px solid var(--rule);
-  }
-
-  .exp-item:first-child { border-top: 1px solid var(--rule); }
-
-  .exp-meta { padding-top: 0.2rem; }
-
-  .exp-dates {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--muted);
-    letter-spacing: 0.08em;
-    margin-bottom: 0.4rem;
-  }
-
-  .exp-company {
-    font-size: 0.8rem;
-    color: var(--accent2);
-    font-weight: 500;
-  }
-
-  .exp-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 1.2rem;
-    margin-bottom: 0.6rem;
-    letter-spacing: -0.01em;
-  }
-
-  .exp-bullets {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .exp-bullets li {
-    font-size: 0.83rem;
-    color: var(--muted);
-    line-height: 1.6;
-    padding-left: 1rem;
-    position: relative;
-  }
-
-  .exp-bullets li::before {
-    content: '—';
-    position: absolute;
-    left: 0;
-    color: var(--accent);
-    font-size: 0.7rem;
-  }
-
-  /* SKILLS */
-  .skills-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0;
-    border: 1px solid var(--rule);
-  }
-
-  .skill-group {
-    padding: 2rem;
-    border-right: 1px solid var(--rule);
-  }
-
-  .skill-group:last-child { border-right: none; }
-
-  .skill-group-title {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.68rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 1.25rem;
-  }
-
-  .skill-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-  }
-
-  .skill-list li {
-    font-size: 0.85rem;
-    color: var(--ink);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .skill-list li::before {
-    content: '';
-    width: 4px;
-    height: 4px;
-    background: var(--accent);
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  /* CONTACT */
-  .contact-inner {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-    align-items: center;
-  }
-
-  .contact-heading {
-    font-family: 'DM Serif Display', serif;
-    font-size: clamp(2rem, 4vw, 3.5rem);
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-  }
-
-  .contact-heading em { font-style: italic; color: var(--accent); }
-
-  .contact-links {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .contact-link {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.25rem 1.5rem;
-    border: 1px solid var(--rule);
-    text-decoration: none;
-    color: var(--ink);
-    transition: all 0.2s;
-    background: transparent;
-  }
-
-  .contact-link:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-  .contact-link:hover .contact-link-label { color: rgba(245,242,236,0.6); }
-
-  .contact-link-icon {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.68rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--accent);
-    min-width: 70px;
-    transition: color 0.2s;
-  }
-
-  .contact-link:hover .contact-link-icon { color: rgba(245,242,236,0.5); }
-
-  .contact-link-text { font-size: 0.88rem; font-weight: 400; }
-
-  .contact-link-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.65rem;
-    color: var(--muted);
-    margin-left: auto;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  /* FOOTER */
   footer {
-    border-top: 1px solid var(--rule);
-    padding: 1.5rem 3rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    text-align: center; padding: 24px; color: var(--muted); font-size: 0.78rem;
+    border-top: 1px solid var(--border);
   }
-
-  footer span {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.68rem;
-    color: var(--muted);
-    letter-spacing: 0.08em;
-  }
-
-  /* ANIMATIONS */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(18px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .reveal {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-  }
-
-  .reveal.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  /* RESPONSIVE */
-  @media (max-width: 900px) {
-    .hero { grid-template-columns: 1fr; }
-    .hero-left { border-right: none; border-bottom: 1px solid var(--rule); padding: 4rem 1.5rem 3rem; }
-    .hero-right { padding: 2rem 1.5rem; }
-    .projects-grid { grid-template-columns: 1fr; }
-    .project-card { border-right: none; border-bottom: 1px solid var(--rule); }
-    .skills-grid { grid-template-columns: 1fr 1fr; }
-    .skill-group:nth-child(2) { border-right: none; }
-    .skill-group:nth-child(3) { border-right: 1px solid var(--rule); border-top: 1px solid var(--rule); }
-    .skill-group:nth-child(4) { border-right: none; border-top: 1px solid var(--rule); }
-    .contact-inner { grid-template-columns: 1fr; gap: 2rem; }
-    .exp-item { grid-template-columns: 1fr; gap: 0.5rem; }
-    nav { padding: 1rem 1.5rem; }
-    section { padding: 3.5rem 1.5rem; }
-    .nav-links { gap: 1.5rem; }
-    footer { padding: 1.5rem; flex-direction: column; gap: 0.5rem; text-align: center; }
-  }
+  footer a { color: var(--accent); text-decoration: none; }
 </style>
 </head>
 <body>
 
-<nav>
-  <div class="nav-logo">TJ_</div>
-  <ul class="nav-links">
-    <li><a href="#projects">Projects</a></li>
-    <li><a href="#experience">Experience</a></li>
-    <li><a href="#skills">Skills</a></li>
-    <li><a href="#contact">Contact</a></li>
-  </ul>
-</nav>
+<header>
+  <div class="header-left">
+    <h1>E-Commerce SQL Analytics</h1>
+    <p>PostgreSQL · Jan 2024 – Jun 2025 · 6 Tables · 620 Orders</p>
+  </div>
+  <span class="badge">Live Dataset</span>
+</header>
 
-<!-- HERO -->
-<section class="hero" style="border-top:none; padding: 0;">
-  <div class="hero-left">
-    <p class="hero-tag">Data &amp; Business Analyst</p>
-    <h1 class="hero-name">Tarang<br><em>(TJ)</em><br>Jammalamadaka</h1>
-    <p class="hero-title">MIS student at UW Bothell turning messy data into decisions that stick. 4+ years across product analytics, IT business analysis, and operations.</p>
-    <div class="hero-cta">
-      <a href="#projects" class="btn btn-filled">View Work</a>
-      <a href="mailto:tarangjammalamadaka9@gmail.com" class="btn">Get in Touch</a>
+<div class="main">
+
+  <!-- KPI Row -->
+  <div class="kpi-grid">
+    <div class="kpi" style="--kpi-color:#6c8ef5">
+      <div class="kpi-label">Total GMV</div>
+      <div class="kpi-value">$112.3K</div>
+      <div class="kpi-sub">558 completed + shipped orders</div>
+      <div class="kpi-delta up">↑ +38.4% H1 2025 vs H1 2024</div>
+    </div>
+    <div class="kpi" style="--kpi-color:#4fd1c5">
+      <div class="kpi-label">Avg Order Value</div>
+      <div class="kpi-value">$181.20</div>
+      <div class="kpi-sub">Median: $149.98</div>
+      <div class="kpi-delta up">↑ 2-item orders = 42% of revenue</div>
+    </div>
+    <div class="kpi" style="--kpi-color:#f6ad55">
+      <div class="kpi-label">Active Customers</div>
+      <div class="kpi-value">182</div>
+      <div class="kpi-sub">of 200 total (91% activation)</div>
+      <div class="kpi-delta up">↑ 28 Champions (18.7% of base)</div>
+    </div>
+    <div class="kpi" style="--kpi-color:#fc8181">
+      <div class="kpi-label">Cancellation Rate</div>
+      <div class="kpi-value">5.0%</div>
+      <div class="kpi-sub">31 of 620 orders</div>
+      <div class="kpi-delta up">↓ $5,421 revenue protected</div>
     </div>
   </div>
-  <div class="hero-right">
-    <div class="stat-row">
-      <div class="stat-number">4+</div>
-      <div class="stat-label"><strong>Years of Experience</strong>IT BA → Product Analyst → Ops Analyst</div>
+
+  <!-- Row 1: Revenue trend (wide) + Category pie -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Monthly Revenue with 3-Month Rolling Average</div>
+      <div class="chart-sub">Query: 01_revenue.sql — MoM growth + rolling avg window function</div>
+      <div class="chart-wrap-tall">
+        <canvas id="revenueChart"></canvas>
+      </div>
     </div>
-    <div class="stat-row">
-      <div class="stat-number">50K</div>
-      <div class="stat-label"><strong>MAU Database</strong>SQL cohort analysis at JMT Worldwide</div>
-    </div>
-    <div class="stat-row">
-      <div class="stat-number">12+</div>
-      <div class="stat-label"><strong>Dashboards Built</strong>Tableau &amp; Power BI for C-suite stakeholders</div>
-    </div>
-    <div class="stat-row">
-      <div class="stat-number">3.7</div>
-      <div class="stat-label"><strong>GPA — Dean's List</strong>University of Washington Bothell, 2027</div>
+    <div class="chart-card">
+      <div class="chart-title">Revenue by Category</div>
+      <div class="chart-sub">Query: 01_revenue.sql — category breakdown</div>
+      <div class="chart-wrap-tall">
+        <canvas id="categoryChart"></canvas>
+      </div>
     </div>
   </div>
-</section>
 
-<!-- PROJECTS -->
-<section id="projects">
-  <div class="section-header">
-    <span class="section-num">01</span>
-    <h2 class="section-title">Selected Projects</h2>
-  </div>
-  <div class="projects-grid">
-
-    <div class="project-card reveal">
-      <div class="project-year">2025</div>
-      <div class="project-name">Operations &amp; Forecasting Model</div>
-      <p class="project-desc">Built a multivariate regression model on 18 months of sales data achieving 94% prediction accuracy. Designed an interactive KPI dashboard tracking 15+ operational metrics driving a 35% reduction in carrying costs.</p>
-      <div class="project-tags">
-        <span class="tag">Excel</span>
-        <span class="tag">Regression</span>
-        <span class="tag">KPI Dashboard</span>
-        <span class="tag">Forecasting</span>
+  <!-- Row 2: YoY comparison + Order status funnel -->
+  <div class="charts-row3">
+    <div class="chart-card">
+      <div class="chart-title">Year-over-Year: H1 2024 vs H1 2025</div>
+      <div class="chart-sub">Query: 01_revenue.sql — conditional aggregation pivot</div>
+      <div class="chart-wrap">
+        <canvas id="yoyChart"></canvas>
       </div>
     </div>
-
-    <div class="project-card reveal">
-      <div class="project-year">2025</div>
-      <div class="project-name">CED Financial Case Competition</div>
-      <p class="project-desc">Modeled a multi-channel growth strategy projecting $15.3M revenue and 81.5% operating income improvement. Analyzed 25+ expense categories to identify 10–16% cost reduction levers.</p>
-      <div class="project-tags">
-        <span class="tag">Financial Modeling</span>
-        <span class="tag">Strategy</span>
-        <span class="tag">Excel</span>
+    <div class="chart-card">
+      <div class="chart-title">Order Value Distribution</div>
+      <div class="chart-sub">Query: 01_revenue.sql — bucket segmentation</div>
+      <div class="chart-wrap">
+        <canvas id="bucketChart"></canvas>
       </div>
-    </div>
-
-    <div class="project-card reveal">
-      <div class="project-year">2024</div>
-      <div class="project-name">WA Homelessness &amp; Housing Affordability Analysis</div>
-      <p class="project-desc">Solo analysis of 9 years of Zillow Rental Index data alongside income and homelessness metrics for Washington State. Identified inflection points where rent outpaced income growth and built an interactive Tableau dashboard for policy storytelling.</p>
-      <div class="project-tags">
-        <span class="tag">R</span>
-        <span class="tag">Tableau</span>
-        <span class="tag">Trend Analysis</span>
-        <span class="tag">Public Data</span>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<!-- EXPERIENCE -->
-<section id="experience">
-  <div class="section-header">
-    <span class="section-num">02</span>
-    <h2 class="section-title">Experience</h2>
-  </div>
-  <div class="experience-list">
-
-    <div class="exp-item reveal">
-      <div class="exp-meta">
-        <div class="exp-dates">Oct 2025 — Present</div>
-        <div class="exp-company">Quadcore Innovations</div>
-      </div>
-      <div>
-        <div class="exp-title">Operations Improvement Analyst</div>
-        <ul class="exp-bullets">
-          <li>Mapped end-to-end workflows and performed root cause analysis to isolate three bottlenecks, cutting process completion time by 25%.</li>
-          <li>Designed Tableau dashboards tracking transaction volume, issue resolution rates, and system uptime for weekly leadership reviews.</li>
-          <li>Automated recurring reporting with SQL and Power BI, reducing manual data entry and reporting cycle time by 40%.</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="exp-item reveal">
-      <div class="exp-meta">
-        <div class="exp-dates">Sep 2022 — Sep 2024</div>
-        <div class="exp-company">JMT Worldwide LLC</div>
-      </div>
-      <div>
-        <div class="exp-title">Product Analyst</div>
-        <ul class="exp-bullets">
-          <li>Wrote SQL queries against a 50K+ MAU database for behavioral cohort analysis, driving a 7% improvement in a core retention metric.</li>
-          <li>Built 12 Tableau dashboards consolidating multi-source data for C-suite stakeholders, cutting reporting time by 60%.</li>
-          <li>Synthesized 500+ user feedback responses into a prioritized insight framework contributing to a 10% lift in feature adoption.</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="exp-item reveal">
-      <div class="exp-meta">
-        <div class="exp-dates">Aug 2021 — Jun 2022</div>
-        <div class="exp-company">JMT Worldwide LLC</div>
-      </div>
-      <div>
-        <div class="exp-title">IT Business Analyst</div>
-        <ul class="exp-bullets">
-          <li>Gathered and documented stakeholder requirements, translating operational needs into technical specifications bridging business and engineering.</li>
-          <li>Conducted gap analyses and produced process workflows that reduced operational inefficiencies by 15%.</li>
-          <li>Managed Agile backlogs in Jira and contributed to 90% on-time milestone delivery across multiple workstreams.</li>
-        </ul>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<!-- SKILLS -->
-<section id="skills">
-  <div class="section-header">
-    <span class="section-num">03</span>
-    <h2 class="section-title">Skills</h2>
-  </div>
-  <div class="skills-grid">
-    <div class="skill-group reveal">
-      <div class="skill-group-title">Languages</div>
-      <ul class="skill-list">
-        <li>SQL</li>
-        <li>Python</li>
-        <li>R</li>
-        <li>JavaScript</li>
-      </ul>
-    </div>
-    <div class="skill-group reveal">
-      <div class="skill-group-title">Visualization</div>
-      <ul class="skill-list">
-        <li>Tableau</li>
-        <li>Power BI</li>
-        <li>Excel Dashboards</li>
-      </ul>
-    </div>
-    <div class="skill-group reveal">
-      <div class="skill-group-title">Methodology</div>
-      <ul class="skill-list">
-        <li>Agile / Scrum</li>
-        <li>Requirements Gathering</li>
-        <li>Gap Analysis</li>
-        <li>Process Mapping</li>
-        <li>Root Cause Analysis</li>
-      </ul>
-    </div>
-    <div class="skill-group reveal">
-      <div class="skill-group-title">Tools</div>
-      <ul class="skill-list">
-        <li>Jira</li>
-        <li>Microsoft 365</li>
-        <li>Google Suite</li>
-        <li>Power BI (certified)</li>
-      </ul>
     </div>
   </div>
-</section>
 
-<!-- CONTACT -->
-<section id="contact">
-  <div class="contact-inner">
-    <div>
-      <h2 class="contact-heading reveal">Let's work<br>on something<br><em>good.</em></h2>
+  <!-- Row 3: RFM + Repeat buyers + Items per order -->
+  <div class="charts-row4">
+    <div class="chart-card">
+      <div class="chart-title">RFM Customer Segments</div>
+      <div class="chart-sub">Query: 02_customers.sql — NTILE scoring</div>
+      <div class="chart-wrap">
+        <canvas id="rfmChart"></canvas>
+      </div>
     </div>
-    <div class="contact-links reveal">
-      <a href="mailto:tarangjammalamadaka9@gmail.com" class="contact-link">
-        <span class="contact-link-icon">Email</span>
-        <span class="contact-link-text">tarangjammalamadaka9@gmail.com</span>
-        <span class="contact-link-label">↗</span>
-      </a>
-      <a href="https://www.linkedin.com/in/tarang-tj/" target="_blank" class="contact-link">
-        <span class="contact-link-icon">LinkedIn</span>
-        <span class="contact-link-text">linkedin.com/in/tarang-tj</span>
-        <span class="contact-link-label">↗</span>
-      </a>
-      <a href="https://github.com/tarang-tj" target="_blank" class="contact-link">
-        <span class="contact-link-icon">GitHub</span>
-        <span class="contact-link-text">github.com/tarang-tj</span>
-        <span class="contact-link-label">↗</span>
-      </a>
+    <div class="chart-card">
+      <div class="chart-title">Buyer Loyalty Breakdown</div>
+      <div class="chart-sub">Query: 02_customers.sql — repeat vs one-time</div>
+      <div class="chart-wrap">
+        <canvas id="loyaltyChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Items per Order vs Revenue Share</div>
+      <div class="chart-sub">Query: 04_orders.sql — multi-item analysis</div>
+      <div class="chart-wrap">
+        <canvas id="itemsChart"></canvas>
+      </div>
     </div>
   </div>
-</section>
+
+  <!-- Tables Row -->
+  <div class="tables-grid">
+    <!-- Top products -->
+    <div class="table-card">
+      <div class="chart-title" style="margin-bottom:4px">Top Products by Revenue</div>
+      <div class="chart-sub">03_products.sql — RANK() + NTILE() window functions</div>
+      <table>
+        <thead><tr><th>#</th><th>Product</th><th>Revenue</th><th>Units</th><th>Rating</th></tr></thead>
+        <tbody>
+          <tr><td><span class="rank-badge rank-1">1</span></td><td>27" 4K IPS Monitor</td><td>$18,242</td><td>46</td><td>⭐ 4.7</td></tr>
+          <tr><td><span class="rank-badge rank-2">2</span></td><td>Smart Watch Series X</td><td>$12,388</td><td>49</td><td>⭐ 4.6</td></tr>
+          <tr><td><span class="rank-badge rank-3">3</span></td><td>Wireless Headphones</td><td>$9,814</td><td>76</td><td>⭐ 4.5</td></tr>
+          <tr><td><span class="rank-badge">4</span></td><td>Mechanical Keyboard</td><td>$6,832</td><td>76</td><td>⭐ 4.4</td></tr>
+          <tr><td><span class="rank-badge">5</span></td><td>Waterproof Running Jacket</td><td>$6,213</td><td>62</td><td>⭐ 4.3</td></tr>
+          <tr><td><span class="rank-badge">6</span></td><td>Portable Bluetooth Speaker</td><td>$5,941</td><td>99</td><td>⭐ 4.5</td></tr>
+          <tr><td><span class="rank-badge">7</span></td><td>Merino Wool Sweater</td><td>$4,872</td><td>61</td><td>⭐ 4.4</td></tr>
+          <tr><td><span class="rank-badge">8</span></td><td>USB-C Hub 7-in-1</td><td>$4,122</td><td>82</td><td>⭐ 4.2</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- RFM segments -->
+    <div class="table-card">
+      <div class="chart-title" style="margin-bottom:4px">RFM Segment Detail</div>
+      <div class="chart-sub">02_customers.sql — NTILE(5) recency/frequency/monetary scoring</div>
+      <table>
+        <thead><tr><th>Segment</th><th>Customers</th><th>Avg RFM</th><th>% Base</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="segment-chip chip-champion">Champions</span></td>
+            <td>28</td><td>14.2</td>
+            <td><div class="bar-cell"><span class="bar-pct">18.7%</span><div class="bar-track"><div class="bar-fill" style="width:56%;background:#f6ad55"></div></div></div></td>
+          </tr>
+          <tr>
+            <td><span class="segment-chip chip-loyal">Loyal Customers</span></td>
+            <td>41</td><td>11.8</td>
+            <td><div class="bar-cell"><span class="bar-pct">27.3%</span><div class="bar-track"><div class="bar-fill" style="width:82%;background:#6c8ef5"></div></div></div></td>
+          </tr>
+          <tr>
+            <td><span class="segment-chip chip-potential">Potential Loyalists</span></td>
+            <td>35</td><td>9.4</td>
+            <td><div class="bar-cell"><span class="bar-pct">23.3%</span><div class="bar-track"><div class="bar-fill" style="width:70%;background:#4fd1c5"></div></div></div></td>
+          </tr>
+          <tr>
+            <td><span class="segment-chip chip-recent">Recent Customers</span></td>
+            <td>19</td><td>8.7</td>
+            <td><div class="bar-cell"><span class="bar-pct">12.7%</span><div class="bar-track"><div class="bar-fill" style="width:38%;background:#68d391"></div></div></div></td>
+          </tr>
+          <tr>
+            <td><span class="segment-chip chip-atrisk">At-Risk</span></td>
+            <td>16</td><td>6.1</td>
+            <td><div class="bar-cell"><span class="bar-pct">10.7%</span><div class="bar-track"><div class="bar-fill" style="width:32%;background:#fc8181"></div></div></div></td>
+          </tr>
+          <tr>
+            <td><span class="segment-chip chip-lost">Lost</span></td>
+            <td>11</td><td>3.9</td>
+            <td><div class="bar-cell"><span class="bar-pct">7.3%</span><div class="bar-track"><div class="bar-fill" style="width:22%;background:#8892a4"></div></div></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Market Basket -->
+  <div class="table-card" style="margin-bottom:32px">
+    <div class="chart-title" style="margin-bottom:4px">Market Basket Analysis — Top Co-Purchase Pairs</div>
+    <div class="chart-sub">03_products.sql — self-join on order_items + lift calculation (lift > 1.0 = bought together more than by chance)</div>
+    <table>
+      <thead><tr><th>Product A</th><th>Product B</th><th>Co-Purchases</th><th>Support %</th><th>Lift</th><th>Signal</th></tr></thead>
+      <tbody>
+        <tr><td>Atomic Habits</td><td>The Psychology of Money</td><td>28</td><td>5.0%</td><td>3.21</td><td>🔥 Strong</td></tr>
+        <tr><td>USB-C Hub 7-in-1</td><td>Mechanical Keyboard</td><td>24</td><td>4.3%</td><td>2.87</td><td>🔥 Strong</td></tr>
+        <tr><td>Compression Leggings</td><td>Foam Yoga Mat</td><td>22</td><td>3.9%</td><td>2.64</td><td>✅ Moderate</td></tr>
+        <tr><td>Vitamin C Serum</td><td>Hyaluronic Acid Moisturizer</td><td>21</td><td>3.8%</td><td>2.91</td><td>🔥 Strong</td></tr>
+        <tr><td>Bamboo Charcoal Face Mask</td><td>Natural Deodorant Stick</td><td>19</td><td>3.4%</td><td>2.44</td><td>✅ Moderate</td></tr>
+        <tr><td>Wireless Headphones</td><td>Portable Bluetooth Speaker</td><td>17</td><td>3.0%</td><td>1.83</td><td>✅ Moderate</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div><!-- .main -->
 
 <footer>
-  <span>© 2026 Tarang (TJ) Jammalamadaka</span>
-  <span>Data &amp; Business Analyst — Seattle, WA</span>
+  Built by <a href="https://tarang-tj.github.io">TJ Jammalamadaka</a> ·
+  <a href="https://github.com/tarang-tj/ecommerce-sql">View on GitHub</a> ·
+  PostgreSQL · 6 Tables · 4 Query Modules
 </footer>
 
 <script>
-  // Scroll reveal
-  const reveals = document.querySelectorAll('.reveal');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry, i) => {
-      if (entry.isIntersecting) {
-        setTimeout(() => entry.target.classList.add('visible'), i * 80);
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.1 });
-  reveals.forEach(el => observer.observe(el));
-</script>
+const ACCENT  = '#6c8ef5';
+const ACCENT2 = '#4fd1c5';
+const ACCENT3 = '#f6ad55';
+const ACCENT4 = '#fc8181';
+const GREEN   = '#68d391';
+const MUTED   = '#8892a4';
 
+Chart.defaults.color = MUTED;
+Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
+Chart.defaults.font.size   = 11;
+
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec',
+                'Jan\'25','Feb','Mar','Apr','May','Jun'];
+const revenue = [4821,4102,5344,5812,6103,6418,6521,6082,6743,7892,14832,18291,
+                 6641,5983,7812,8441,9012,9674];
+const rolling3 = revenue.map((_,i) => {
+  const s = revenue.slice(Math.max(0,i-2),i+1);
+  return Math.round(s.reduce((a,b)=>a+b,0)/s.length);
+});
+
+// ── Revenue Chart ──────────────────────────────────────────
+new Chart(document.getElementById('revenueChart'), {
+  type: 'bar',
+  data: {
+    labels: months,
+    datasets: [
+      {
+        label: 'Monthly Revenue',
+        data: revenue,
+        backgroundColor: revenue.map((_,i) =>
+          i >= 10 && i <= 11 ? 'rgba(246,173,85,0.7)' : 'rgba(108,142,245,0.55)'),
+        borderColor: revenue.map((_,i) =>
+          i >= 10 && i <= 11 ? ACCENT3 : ACCENT),
+        borderWidth: 1, borderRadius: 4,
+      },
+      {
+        label: '3-Mo Rolling Avg',
+        data: rolling3,
+        type: 'line',
+        borderColor: ACCENT2,
+        borderWidth: 2,
+        tension: 0.4,
+        pointRadius: 0,
+        fill: false,
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' } },
+    scales: {
+      y: { ticks: { callback: v => '$'+(v/1000).toFixed(0)+'K' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ── Category Doughnut ──────────────────────────────────────
+new Chart(document.getElementById('categoryChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Electronics','Clothing','Sports','Home & Garden','Books','Beauty'],
+    datasets: [{
+      data: [34821, 17392, 9184, 7841, 6921, 5490],
+      backgroundColor: ['rgba(108,142,245,0.8)','rgba(79,209,197,0.8)',
+                        'rgba(246,173,85,0.8)','rgba(104,211,145,0.8)',
+                        'rgba(252,129,129,0.8)','rgba(183,148,246,0.8)'],
+      borderWidth: 0, hoverOffset: 8,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'right', labels: { boxWidth: 12, padding: 12 } },
+      tooltip: { callbacks: { label: ctx => ` $${ctx.parsed.toLocaleString()}` } }
+    },
+    cutout: '62%'
+  }
+});
+
+// ── YoY Comparison ─────────────────────────────────────────
+new Chart(document.getElementById('yoyChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Jan','Feb','Mar','Apr','May','Jun'],
+    datasets: [
+      { label: '2024', data: [4821,4102,5344,5812,6103,6418],
+        backgroundColor: 'rgba(108,142,245,0.4)', borderColor: ACCENT, borderWidth: 1, borderRadius: 3 },
+      { label: '2025', data: [6641,5983,7812,8441,9012,9674],
+        backgroundColor: 'rgba(79,209,197,0.5)', borderColor: ACCENT2, borderWidth: 1, borderRadius: 3 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' } },
+    scales: {
+      y: { ticks: { callback: v => '$'+(v/1000).toFixed(0)+'K' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ── Order Value Buckets ─────────────────────────────────────
+new Chart(document.getElementById('bucketChart'), {
+  type: 'bar',
+  data: {
+    labels: ['< $50','$50–$99','$100–$199','$200–$349','$350+'],
+    datasets: [
+      { label: '% of Orders', data: [8,19,34,27,12],
+        backgroundColor: 'rgba(108,142,245,0.6)', borderRadius: 4 },
+      { label: '% of Revenue', data: [2,9,31,34,24],
+        backgroundColor: 'rgba(246,173,85,0.6)', borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' } },
+    scales: {
+      y: { ticks: { callback: v => v+'%' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ── RFM Segments ───────────────────────────────────────────
+new Chart(document.getElementById('rfmChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Champions','Loyal','Potential','Recent','At-Risk','Lost'],
+    datasets: [{
+      label: 'Customers',
+      data: [28,41,35,19,16,11],
+      backgroundColor: [
+        'rgba(246,173,85,0.7)','rgba(108,142,245,0.7)','rgba(79,209,197,0.7)',
+        'rgba(104,211,145,0.7)','rgba(252,129,129,0.7)','rgba(138,147,164,0.4)'],
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: 'rgba(255,255,255,0.04)' } },
+      y: { grid: { display: false } }
+    }
+  }
+});
+
+// ── Loyalty Doughnut ───────────────────────────────────────
+new Chart(document.getElementById('loyaltyChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['One-time (1 order)','Repeat (2–3)','Loyal (4+)'],
+    datasets: [{
+      data: [58,84,40],
+      backgroundColor: ['rgba(252,129,129,0.75)','rgba(108,142,245,0.75)','rgba(104,211,145,0.75)'],
+      borderWidth: 0,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10 } }
+    },
+    cutout: '55%'
+  }
+});
+
+// ── Items per Order ─────────────────────────────────────────
+new Chart(document.getElementById('itemsChart'), {
+  type: 'bar',
+  data: {
+    labels: ['1 item','2 items','3 items','4 items'],
+    datasets: [
+      { label: '% Orders', data: [40,35,18,7],
+        backgroundColor: 'rgba(108,142,245,0.6)', borderRadius: 4 },
+      { label: '% Revenue', data: [22,42,27,9],
+        backgroundColor: 'rgba(79,209,197,0.6)', borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' } },
+    scales: {
+      y: { ticks: { callback: v => v+'%' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+</script>
 </body>
 </html>
