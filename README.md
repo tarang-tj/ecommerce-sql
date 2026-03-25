@@ -2,7 +2,7 @@
 
 End-to-end PostgreSQL analytics project on a normalized 6-table e-commerce schema.
 Covers revenue KPIs, customer lifetime value, RFM segmentation, market basket analysis,
-fulfillment SLAs, and rolling revenue windows — across **18 months of realistic transaction data**.
+fulfillment SLAs, and rolling revenue windows, across **18 months of realistic transaction data**.
 
 **[→ View Live Dashboard](https://tarang-tj.github.io/ecommerce-sql/)**
 
