@@ -8,6 +8,21 @@ fulfillment SLAs, and rolling revenue windows, across **18 months of realistic t
 
 ---
 
+## At a glance
+
+| Metric | Result |
+|---|---|
+| Total GMV | $112,344 across 620 orders (Jan 2024 – Jun 2025) |
+| Top category | Electronics, 34.3% of revenue |
+| Holiday concentration | Nov–Dec 2024 drove $33,123 (29.5% of annual GMV) |
+| Loyalty skew | Loyal buyers (22% of base) generate 34% of revenue |
+| Customer activation | 182 of 200 customers placed an order (91%) |
+| Fulfillment | 6.4 days avg end-to-end; 18.9% of completed orders breach the 5-day SLA |
+
+Full breakdowns with the queries behind each number are below.
+
+---
+
 ## Dataset
 
 | Table | Rows | Description |
