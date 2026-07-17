@@ -190,11 +190,13 @@ ecommerce-sql/
 ├── data/
 │   └── seed.sql                # 620 orders, 1,189 line items, realistic seasonality
 │
-├── 01_revenue.sql              # GMV, MoM growth, YoY pivot, rolling avg, distribution
-├── 02_customers.sql            # LTV, RFM segments, cohort retention, repeat buyers
-├── 03_products.sql             # Leaderboard, category benchmarks, market basket, stock alerts
-├── 04_orders.sql               # Funnel, SLA analysis, anomaly detection, reorder gap
+├── analysis/
+│   ├── 01_revenue.sql          # GMV, MoM growth, YoY pivot, rolling avg, distribution
+│   ├── 02_customers.sql        # LTV, RFM segments, cohort retention, repeat buyers
+│   ├── 03_products.sql         # Leaderboard, category benchmarks, market basket, stock alerts
+│   └── 04_orders.sql           # Funnel, SLA analysis, anomaly detection, reorder gap
 │
+├── erd.md                      # Entity-relationship diagram
 ├── index.html                  # Interactive dashboard (Chart.js, dark theme)
 └── INSIGHTS.md                 # Analyst write-up and stakeholder recommendations
 ```
@@ -231,7 +233,7 @@ psql -d ecommerce -f schema/schema.sql
 psql -d ecommerce -f data/seed.sql
 
 # 4. Run any analysis module
-psql -d ecommerce -f 01_revenue.sql
+psql -d ecommerce -f analysis/01_revenue.sql
 ```
 
 ---
